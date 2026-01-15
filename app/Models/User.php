@@ -62,4 +62,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Place::class);
     }
+    /**
+ * Вещи, которые мне передали (через таблицу usages)
+ */
+    public function receivedThings()
+    {
+        return $this->belongsToMany(Thing::class, 'usages')
+                ->withPivot('amount')
+                ->withTimestamps();
+}
 }

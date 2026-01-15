@@ -125,4 +125,13 @@ class ThingController extends Controller
             abort(403, 'У вас нет доступа к этой вещи.');
         }
     }
+    /**
+ * Вещи, которые мне передали
+ */
+    public function received()
+{
+    $received = auth()->user()->receivedThings()->withPivot('amount')->get();
+
+    return view('things.received', compact('received'));
+}
 }

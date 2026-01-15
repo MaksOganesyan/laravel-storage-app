@@ -33,6 +33,15 @@
                 </div>
             @endauth
         </div>
+        @auth
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6 mb-4">
+            <a href="{{ route('received.things') }}" class="btn btn-info btn-lg w-100">
+                <i class="bi bi-gift me-2"></i> Вещи, которые мне передали
+            </a>
+        </div>
+    </div>
+@endauth
 
         <!-- Преимущества (карточки) -->
         <div class="row text-center">
