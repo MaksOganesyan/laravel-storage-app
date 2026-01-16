@@ -14,7 +14,11 @@ class ThingController extends Controller
         $things = auth()->user()->things()
             ->with('usages')
             ->latest()
-            ->paginate(10);  // ← пагинация
+            ->paginate(10);  
+        foreach ($things as $thing) {
+        $used = $thing->usages->sum('amount'); 
+        $thing->available_amount = $thing->amount - $used;
+    }
 
         return view('things.index', compact('things'));
     }
@@ -119,7 +123,7 @@ class ThingController extends Controller
     {
         $received = auth()->user()->receivedThings()
             ->withPivot('amount')
-            ->paginate(10);  // ← пагинация
+            ->paginate(10);  
 
         return view('things.received', compact('received'));
     }
@@ -150,4 +154,64 @@ class ThingController extends Controller
             abort(403, 'У вас нет доступа к этой вещи.');
         }
     }
+    /**
+ * Мои вещи (где я хозяин)
+ */
+public function myThings()
+{
+    $things = auth()->user()->things()->latest()->paginate(10);
+    $title = 'My things';
+    return view('things.list', compact('things', 'title'));
+}
+
+/**
+ * Вещи в специальных местах (repair = true)
+ */
+public function repairThings()
+{
+    $things = Thing::whereHas('place', fn($q) => $q->where('repair', true))
+        ->latest()
+        ->paginate(10);
+    $title = 'В ремонте ';
+    return view('things.list', compact('things', 'title'));
+}
+
+/**
+ * Вещи в работе (work = true)
+ */
+public function workThings()
+{
+    $things = Thing::whereHas('place', fn($q) => $q->where('work', true))
+        ->latest()
+        ->paginate(10);
+    $title = 'В работе';
+    return view('things.list', compact('things', 'title'));
+}
+
+/**
+ * Вещи, которые я передал другим (Used things)
+ */
+public function usedThings()
+{
+    $things = Thing::whereHas('usages', fn($q) => $q->where('user_id', '!=', auth()->id()))
+        ->latest()
+        ->paginate(10);
+    $title = 'Переданные мною';
+    return view('things.list', compact('things', 'title'));
+}
+
+/**
+ * Общий список всех вещей (для админа/проверки)
+ */
+public function allThings()
+{
+    $things = Thing::latest()->paginate(10);
+    $title = 'Все вещи';
+    return view('things.list', compact('things', 'title'));
+}
+public function show(Thing $thing)
+{
+    $this->authorizeThing($thing);
+    return view('things.show', compact('thing'));
+}
 }

@@ -28,39 +28,46 @@
                         <a class="nav-link" href="{{ route('register') }}">Регистрация</a>
                     </li>
                 @else
+                {{ auth()->user()->id }}  <!-- покажет твой ID прямо на странице -->
+                    <!-- Приветствие (остаётся отдельно) -->
                     <li class="nav-item">
                         <span class="nav-link text-white">Привет, {{ auth()->user()->name }}!</span>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('things.index') }}">
-                            <i class="bi bi-box-seam me-1"></i> Мои вещи
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('places.index') }}">
-                            <i class="bi bi-house-door me-1"></i> Мои места
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('received.things') }}">
-                            <i class="bi bi-gift me-1"></i> Вещи, которые мне передали
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('things.create') }}">
-                            <i class="bi bi-plus-circle me-1"></i> Добавить вещь
-                        </a>
-                    </li>
 
-                    <li class="nav-item">
-                        <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="nav-link btn btn-link text-white p-0 border-0 bg-transparent">
-                                Выход
-                            </button>
-                        </form>
+                    <!-- Одно-единственное выпадающее меню "Меню" — всё внутри -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-list me-1"></i> Меню
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuDropdown">
+                            <!-- 5 пунктов из допа -->
+                            <li><a class="dropdown-item" href="{{ route('things.index') }}"><i class="bi bi-person me-1"></i> Мои вещи</a></li>
+                            <li><a class="dropdown-item" href="{{ route('things.repair') }}"><i class="bi bi-tools me-1"></i> В ремонте</a></li>
+                            <li><a class="dropdown-item" href="{{ route('things.work') }}"><i class="bi bi-gear me-1"></i> В работе</a></li>
+                            <li><a class="dropdown-item" href="{{ route('things.used') }}"><i class="bi bi-people me-1"></i> Переданные мной</a></li>
+                            <li><a class="dropdown-item" href="{{ route('things.all') }}"><i class="bi bi-list-ul me-1"></i> Все вещи</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+
+                            <!-- Остальные важные действия -->
+                            <li><a class="dropdown-item" href="{{ route('places.index') }}"><i class="bi bi-house-door me-1"></i> Мои места</a></li>
+                            <li><a class="dropdown-item" href="{{ route('received.things') }}"><i class="bi bi-gift me-1"></i> Мне передали</a></li>
+                            <li><a class="dropdown-item" href="{{ route('things.create') }}"><i class="bi bi-plus-circle me-1"></i> Добавить вещь</a></li>
+
+                            <li><hr class="dropdown-divider"></li>
+
+                            <!-- Выход (красный для заметности) -->
+                            <li>
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-1"></i> Выход
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
-                @endguest
+                @endauth
             </ul>
         </div>
     </div>

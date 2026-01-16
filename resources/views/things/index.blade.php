@@ -44,12 +44,17 @@
                                     </p>
                                 @endif
 
+                                <!-- Количество -->
+                                <p class="text-muted small mt-2">
+                                    Всего: {{ $thing->amount }} шт.  
+                                    <strong class="text-success">Доступно: {{ $thing->available_amount }} шт.</strong>
+                                </p>
+
                                 <!-- Кнопки действий -->
                                 <div class="mt-auto d-flex gap-2 flex-wrap">
                                     <a href="{{ route('things.edit', $thing) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i> Редактировать
                                     </a>
-                                    <p>Количество: {{ $thing->amount }} шт. (доступно: {{ $thing->available_amount }})</p>
 
                                     <form action="{{ route('things.destroy', $thing) }}" method="POST" class="d-inline">
                                         @csrf
@@ -59,17 +64,25 @@
                                         </button>
                                     </form>
 
-                                    <form action="{{ route('things.transfer', $thing) }}" method="GET" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-info">
-                                            <i class="bi bi-arrow-right-circle"></i> Передать
-                                        </button>
-                                    </form>
+                                    @if($thing->available_amount > 0)
+                                        <form action="{{ route('things.transfer', $thing) }}" method="GET" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-arrow-right-circle"></i> Передать
+                                            </button>
+                                        </form>
+                                    @else
+                                        <button class="btn btn-sm btn-outline-secondary disabled">Передать</button>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
+
+          <div class="d-flex justify-content-center mt-4">
+    {{ $things->links() }}
+</div>
         @endif
     </div>
 @endsection
