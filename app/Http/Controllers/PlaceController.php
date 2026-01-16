@@ -13,6 +13,7 @@ class PlaceController extends Controller
     public function index()
     {
         $places = auth()->user()->places()->latest()->get();
+        $places = auth()->user()->places()->paginate(10);
         return view('places.index', compact('places'));
     }
 

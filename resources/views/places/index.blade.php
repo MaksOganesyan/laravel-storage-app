@@ -46,6 +46,7 @@
                                         <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить место?')">
                                             <i class="bi bi-trash"></i> Удалить
                                         </button>
+                                        <p>Вещей здесь: {{ $place->things()->count() }}</p>
                                     </form>
                                 </div>
                             </div>

@@ -33,6 +33,13 @@
                                 @endif
                             </div>
                         </div>
+                        <form action="{{ route('received.return', $thing) }}" method="POST" style="display:inline;">
+    @csrf
+    @method('POST')
+    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Вернуть вещь {{ $thing->name }}?')">
+        Вернуть
+    </button>
+</form>
                     </div>
                 @endforeach
             </div>

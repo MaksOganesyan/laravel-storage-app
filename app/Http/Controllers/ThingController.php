@@ -9,129 +9,145 @@ use Illuminate\Http\Request;
 
 class ThingController extends Controller
 {
-    /**
-     * Показать список всех вещей текущего пользователя
-     */
     public function index()
     {
-        $things = auth()->user()->things()->latest()->get();
+        $things = auth()->user()->things()
+            ->with('usages')
+            ->latest()
+            ->paginate(10);  // ← пагинация
+
         return view('things.index', compact('things'));
     }
 
-    /**
-     * Показать форму для создания новой вещи
-     */
     public function create()
     {
         return view('things.create');
     }
 
-    /**
-     * Сохранить новую вещь
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'wrnt' => 'nullable|date',
+            'wrnt'        => 'nullable|date',
+            'amount'      => 'required|integer|min:1',
+            'place_id'    => 'nullable|exists:places,id',
+
         ]);
 
         auth()->user()->things()->create($request->all());
 
-        return redirect()->route('things.index')->with('success', 'Вещь успешно добавлена!');
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь успешно добавлена!');
     }
 
-    /**
-     * Показать форму для редактирования вещи
-     */
     public function edit(Thing $thing)
     {
         $this->authorizeThing($thing);
         return view('things.edit', compact('thing'));
     }
 
-    /**
-     * Обновить вещь
-     */
     public function update(Request $request, Thing $thing)
     {
         $this->authorizeThing($thing);
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'wrnt' => 'nullable|date',
+            'wrnt'        => 'nullable|date',
+            'amount'      => 'required|integer|min:1',
+            'place_id'    => 'nullable|exists:places,id',
+
         ]);
 
         $thing->update($request->all());
 
-        return redirect()->route('things.index')->with('success', 'Вещь обновлена!');
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь обновлена!');
     }
 
-    /**
-     * Удалить вещь
-     */
     public function destroy(Thing $thing)
     {
         $this->authorizeThing($thing);
-
         $thing->delete();
 
-        return redirect()->route('things.index')->with('success', 'Вещь удалена!');
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь удалена!');
     }
 
-    /**
-     * Показать форму передачи вещи другому пользователю
-     */
     public function transfer(Thing $thing)
     {
         $this->authorizeThing($thing);
 
-        // Все пользователи кроме текущего
         $users = User::where('id', '!=', auth()->id())->get();
 
         return view('things.transfer', compact('thing', 'users'));
     }
 
-    /**
-     * Сохранить передачу вещи
-     */
     public function transferStore(Request $request, Thing $thing)
     {
         $this->authorizeThing($thing);
 
         $request->validate([
             'user_id' => 'required|exists:users,id|not_in:' . auth()->id(),
-            'amount' => 'required|integer|min:1',
+            'amount'  => [
+                'required',
+                'integer',
+                'min:1',
+                'max:' . $thing->available_amount,
+            ],
         ]);
+
+        if ($request->amount > $thing->available_amount) {
+            return back()->withErrors(['amount' => 'Нельзя передать больше, чем есть'])->withInput();
+        }
 
         Usage::create([
             'thing_id' => $thing->id,
-            'user_id' => $request->user_id,
-            'amount' => $request->amount,
-            'place_id' => null, // можно добавить выбор места позже
+            'user_id'  => $request->user_id,
+            'amount'   => $request->amount,
+            'place_id' => null,
         ]);
 
-        return redirect()->route('things.index')->with('success', 'Вещь успешно передана!');
+        $thing->decrement('amount', $request->amount);
+
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь успешно передана!');
     }
 
-    /**
-     * Проверка, что вещь принадлежит текущему пользователю
-     */
+    public function received()
+    {
+        $received = auth()->user()->receivedThings()
+            ->withPivot('amount')
+            ->paginate(10);  // ← пагинация
+
+        return view('things.received', compact('received'));
+    }
+
+    public function returnThing(Thing $thing)
+    {
+        $user = auth()->user();
+
+        if ($user->receivedThings()->where('thing_id', $thing->id)->exists()) {
+            $pivot = $user->receivedThings()->where('thing_id', $thing->id)->first()->pivot;
+            $amount = $pivot->amount;
+
+            $thing->increment('amount', $amount);
+
+            $user->receivedThings()->detach($thing->id);
+
+            session()->flash('success', 'Вещь успешно возвращена владельцу!');
+        } else {
+            session()->flash('error', 'Эта вещь не была вам передана.');
+        }
+
+        return redirect()->route('received.things');
+    }
+
     private function authorizeThing(Thing $thing)
     {
         if ($thing->master_id !== auth()->id()) {
             abort(403, 'У вас нет доступа к этой вещи.');
         }
     }
-    /**
- * Вещи, которые мне передали
- */
-    public function received()
-{
-    $received = auth()->user()->receivedThings()->withPivot('amount')->get();
-
-    return view('things.received', compact('received'));
-}
 }

@@ -9,40 +9,45 @@ class Thing extends Model
 {
     use HasFactory;
 
-    /**
-     * Поля, которые можно массово заполнять (через create или fill)
-     */
     protected $fillable = [
         'name',
         'description',
         'wrnt',
         'master_id',
+        'amount',
+        'place_id',
     ];
 
-    /**
-     * Отношение: вещь принадлежит одному хозяину (пользователю)
-     */
+    protected $casts = [
+        'wrnt'   => 'date',
+        'amount' => 'integer',
+    ];
+
     public function master()
     {
         return $this->belongsTo(User::class, 'master_id');
     }
 
-    /**
-     * Отношение: вещь может использоваться многими пользователями (через таблицу usages)
-     */
     public function usages()
     {
         return $this->hasMany(Usage::class);
     }
 
-    /**
-     * Геттер: красивое отображение даты гарантии (если нужно в шаблонах)
-     */
+    // Вещи, которые переданы другим (через usages)
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'usages')
+                    ->withPivot('amount')
+                    ->withTimestamps();
+    }
+
+    public function getAvailableAmountAttribute()
+    {
+        return $this->amount;
+    }
+
     public function getWrntFormattedAttribute()
     {
         return $this->wrnt ? $this->wrnt->format('d.m.Y') : 'Не указана';
     }
-    protected $casts = [
-    'wrnt' => 'date',  
-];
 }

@@ -49,6 +49,7 @@
                                     <a href="{{ route('things.edit', $thing) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i> Редактировать
                                     </a>
+                                    <p>Количество: {{ $thing->amount }} шт. (доступно: {{ $thing->available_amount }})</p>
 
                                     <form action="{{ route('things.destroy', $thing) }}" method="POST" class="d-inline">
                                         @csrf

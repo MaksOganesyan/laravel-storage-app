@@ -26,4 +26,5 @@ Route::middleware('auth')->group(function () {
     Route::get('things/{thing}/transfer', [ThingController::class, 'transfer'])->name('things.transfer');
     Route::post('things/{thing}/transfer', [ThingController::class, 'transferStore'])->name('things.transfer.store');
     Route::get('/received-things', [ThingController::class, 'received'])->name('received.things');
+    Route::post('/received-things/{thing}/return', [ThingController::class, 'returnThing'])->name('received.return');
 });
