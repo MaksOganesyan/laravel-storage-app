@@ -9,9 +9,6 @@ class Usage extends Model
 {
     use HasFactory;
 
-    /**
-     * Поля для массового заполнения
-     */
     protected $fillable = [
         'thing_id',
         'place_id',
@@ -27,17 +24,11 @@ class Usage extends Model
         return $this->belongsTo(Thing::class);
     }
 
-    /**
-     * Запись использования принадлежит одному месту хранения
-     */
     public function place()
     {
         return $this->belongsTo(Place::class);
     }
 
-    /**
-     * Запись использования принадлежит одному пользователю (кто взял вещь)
-     */
     public function user()
     {
         return $this->belongsTo(User::class);

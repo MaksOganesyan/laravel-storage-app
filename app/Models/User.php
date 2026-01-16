@@ -11,26 +11,18 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Поля, которые можно массово заполнять
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
     ];
 
-    /**
-     * Скрытые поля при сериализации
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Преобразование типов
-     */
+  
     protected function casts(): array
     {
         return [
@@ -40,7 +32,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Пользователь может быть хозяином многих вещей
+     * Пользователь  хозяин  вещей
      */
     public function things()
     {
@@ -48,22 +40,20 @@ class User extends Authenticatable
     }
 
     /**
-     * Пользователь может использовать (брать) много вещей
+     * Пользователь  использовать много вещей
      */
     public function usages()
     {
         return $this->hasMany(Usage::class);
     }
 
-    /**
-     * Пользователь может иметь много своих мест хранения
-     */
+   
     public function places()
     {
         return $this->hasMany(Place::class);
     }
     /**
- * Вещи, которые мне передали (через таблицу usages)
+ * Передача
  */
     public function receivedThings()
     {

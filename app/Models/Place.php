@@ -9,9 +9,6 @@ class Place extends Model
 {
     use HasFactory;
 
-    /**
-     * Поля для массового заполнения
-     */
     protected $fillable = [
         'name',
         'description',
@@ -19,9 +16,6 @@ class Place extends Model
         'work',
     ];
 
-    /**
-     * Место может использоваться для многих вещей
-     */
     public function usages()
     {
         return $this->hasMany(Usage::class);

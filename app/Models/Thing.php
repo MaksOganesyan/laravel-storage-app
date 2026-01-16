@@ -33,7 +33,6 @@ class Thing extends Model
         return $this->hasMany(Usage::class);
     }
 
-    // Вещи, которые переданы другим (через usages)
     public function users()
     {
         return $this->belongsToMany(User::class, 'usages')

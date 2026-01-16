@@ -15,7 +15,7 @@ return new class extends Migration
         $table->id();
         $table->string('name');
         $table->text('description')->nullable();
-        $table->date('wrnt')->nullable(); // гарантия/срок годности
+        $table->date('wrnt')->nullable();
         $table->foreignId('master_id')->constrained('users')->onDelete('cascade');
         $table->timestamps();
     });
