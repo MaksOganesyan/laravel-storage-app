@@ -87,7 +87,7 @@ class ThingController extends Controller
                 'required',
                 'integer',
                 'min:1',
-                'max:' . $thing->available_amount,
+                'max:' . (int)$thing->available_amount,
             ],
         ]);
 

@@ -40,11 +40,10 @@ class Thing extends Model
                     ->withTimestamps();
     }
 
-    public function getAvailableAmountAttribute()
-    {
-        return $this->amount;
-    }
-
+   public function getAvailableAmountAttribute()
+{
+    return $this->amount - $this->usages->sum('amount');
+}
     public function getWrntFormattedAttribute()
     {
         return $this->wrnt ? $this->wrnt->format('d.m.Y') : 'Не указана';
@@ -53,5 +52,5 @@ class Thing extends Model
     {
         return $this->belongsTo(Place::class);
     }
-    public $available_amount; 
+   
 }

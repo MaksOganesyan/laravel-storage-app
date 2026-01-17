@@ -47,7 +47,7 @@
                                 <!-- Количество -->
                                 <p class="text-muted small mt-2">
                                     Всего: {{ $thing->amount }} шт.  
-                                    <strong class="text-success">Доступно: {{ $thing->available_amount }} шт.</strong>
+                        
                                 </p>
 
                                 <!-- Кнопки действий -->
