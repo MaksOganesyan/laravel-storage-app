@@ -28,13 +28,23 @@
                         <a class="nav-link" href="{{ route('register') }}">Регистрация</a>
                     </li>
                 @else
-                {{ auth()->user()->id }}  <!-- покажет твой ID прямо на странице -->
-                    <!-- Приветствие (остаётся отдельно) -->
+                {{ auth()->user()->id }}  
+                    
                     <li class="nav-item">
                         <span class="nav-link text-white">Привет, {{ auth()->user()->name }}!</span>
                     </li>
+                    @if(auth()->user()->is_admin)
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-warning" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-shield-lock-fill me-1"></i> Админ
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
+                                    <li><a class="dropdown-item" href="{{ route('things.all') }}"><i class="bi bi-list-ul me-1"></i> Все вещи</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('places.index') }}"><i class="bi bi-house-door me-1"></i> Управление местами</a></li>
+                                </ul>
+                            </li>
+                        @endif
 
-                    <!-- Одно-единственное выпадающее меню "Меню" — всё внутри -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-list me-1"></i> Меню
