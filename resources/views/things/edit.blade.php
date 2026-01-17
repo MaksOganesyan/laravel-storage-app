@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Редактировать вещь')
+@section('title', 'Редактировать вещь: ' . $thing->name)
 
 @section('content')
     <div class="container py-5">
-        <h1 class="mb-4">Редактировать вещь</h1>
+        <h1 class="mb-4">Редактировать вещь: {{ $thing->name }}</h1>
 
         @if($errors->any())
             <div class="alert alert-danger">
@@ -55,9 +55,25 @@
                 @enderror
             </div>
 
+            <!-- Размерность количества — вот это по ТЗ допа №6 -->
+            <div class="mb-3">
+                <label for="unit_id" class="form-label">Размерность количества</label>
+                <select name="unit_id" id="unit_id" class="form-select @error('unit_id') is-invalid @enderror">
+                    <option value="">-- Не указывать --</option>
+                    @foreach(\App\Models\Unit::all() as $unit)
+                        <option value="{{ $unit->id }}" {{ old('unit_id', $thing->unit_id) == $unit->id ? 'selected' : '' }}>
+                            {{ $unit->name }} ({{ $unit->short }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('unit_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
             <div class="mb-3">
                 <label for="place_id" class="form-label">Место хранения</label>
-                <select name="place_id" id="place_id" class="form-control @error('place_id') is-invalid @enderror">
+                <select name="place_id" id="place_id" class="form-select @error('place_id') is-invalid @enderror">
                     <option value="">-- Не выбрано --</option>
                     @foreach(auth()->user()->places as $place)
                         <option value="{{ $place->id }}" {{ old('place_id', $thing->place_id) == $place->id ? 'selected' : '' }}>

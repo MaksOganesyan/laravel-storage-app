@@ -3,23 +3,33 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Админ — создаём или обновляем (не падает на дубликат)
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Админ',
+                'password' => bcrypt('12345678'),
+                'is_admin' => true,
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Тестовый пользователь — тоже firstOrCreate
+        User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => bcrypt('12345678'),
+                'is_admin' => false,
+            ]
+        );
+
+        $this->command->info('Админ создан/обновлён: admin@example.com / 12345678');
+        $this->command->info('Тестовый пользователь: test@example.com / 12345678');
     }
 }
