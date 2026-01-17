@@ -22,7 +22,7 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::resource('things', ThingController::class)->except(['show']);
-    Route::resource('places', PlaceController::class);
+    Route::resource('places', PlaceController::class)->middleware('admin');
     Route::get('things/{thing}/transfer', [ThingController::class, 'transfer'])->name('things.transfer');
     Route::post('things/{thing}/transfer', [ThingController::class, 'transferStore'])->name('things.transfer.store');
     Route::get('/received-things', [ThingController::class, 'received'])->name('received.things');
@@ -31,5 +31,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/things/repair', [ThingController::class, 'repairThings'])->name('things.repair');
     Route::get('/things/work', [ThingController::class, 'workThings'])->name('things.work');
     Route::get('/things/used', [ThingController::class, 'usedThings'])->name('things.used');
-    Route::get('/things/all', [ThingController::class, 'allThings'])->name('things.all');
+    Route::get('/things/all', [ThingController::class, 'allThings'])->name('things.all')->middleware('admin');
 });

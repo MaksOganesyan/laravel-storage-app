@@ -8,53 +8,69 @@ use Illuminate\Http\Request;
 class PlaceController extends Controller
 {
     /**
-     * Показать список всех мест текущего пользователя
+     * Показать список всех мест (только админ)
      */
     public function index()
     {
-        $places = auth()->user()->places()->latest()->get();
-        $places = auth()->user()->places()->paginate(10);
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ только для администратора.');
+        }
+
+        $places = Place::latest()->paginate(10);
         return view('places.index', compact('places'));
     }
 
     /**
-     * Показать форму для создания нового места
+     * Показать форму для создания нового места (только админ)
      */
     public function create()
     {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ только для администратора.');
+        }
+
         return view('places.create');
     }
 
     /**
-     * Сохранить новое место
+     * Сохранить новое место (только админ)
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ только для администратора.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        auth()->user()->places()->create($request->all());
+        Place::create($request->all());  // админ создаёт любое место
 
         return redirect()->route('places.index')->with('success', 'Место хранения успешно добавлено!');
     }
 
     /**
-     * Показать форму для редактирования места
+     * Показать форму для редактирования места (только админ)
      */
     public function edit(Place $place)
     {
-        $this->authorizePlace($place);
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ только для администратора.');
+        }
+
         return view('places.edit', compact('place'));
     }
 
     /**
-     * Обновить место
+     * Обновить место (только админ)
      */
     public function update(Request $request, Place $place)
     {
-        $this->authorizePlace($place);
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ только для администратора.');
+        }
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -67,24 +83,16 @@ class PlaceController extends Controller
     }
 
     /**
-     * Удалить место
+     * Удалить место (только админ)
      */
     public function destroy(Place $place)
     {
-        $this->authorizePlace($place);
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ только для администратора.');
+        }
 
         $place->delete();
 
         return redirect()->route('places.index')->with('success', 'Место удалено!');
-    }
-
-    /**
-     * Проверка, что место принадлежит текущему пользователю
-     */
-    private function authorizePlace(Place $place)
-    {
-        if ($place->user_id !== auth()->id()) {
-            abort(403, 'У вас нет доступа к этому месту хранения.');
-        }
     }
 }

@@ -205,6 +205,9 @@ public function usedThings()
  */
 public function allThings()
 {
+    if (!auth()->user()->is_admin) {
+        abort(403, 'Доступ только для администратора.');
+    }
     $things = Thing::latest()->paginate(10);
     $title = 'Все вещи';
     return view('things.list', compact('things', 'title'));
