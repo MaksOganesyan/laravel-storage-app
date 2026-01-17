@@ -5,7 +5,7 @@
 @section('content')
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Мои места хранения</h1>
+            <h1> Места хранения</h1>
             <a href="{{ route('places.create') }}" class="btn btn-success">
                 <i class="bi bi-plus-lg"></i> Добавить место
             </a>

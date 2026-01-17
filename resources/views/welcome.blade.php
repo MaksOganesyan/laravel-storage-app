@@ -22,7 +22,7 @@
                 </div>
                 <div class="col-md-4 mb-3">
                     <a href="{{ route('places.index') }}" class="btn btn-success btn-lg w-100">
-                        <i class="bi bi-house-door me-2"></i> Мои места хранения
+                        <i class="bi bi-house-door me-2"></i>  Места хранения
                     </a>
                 </div>
             @else

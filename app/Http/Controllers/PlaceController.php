@@ -7,10 +7,6 @@ use Illuminate\Http\Request;
 
 class PlaceController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(Place::class, 'place');
-    }
 
     public function index()
     {

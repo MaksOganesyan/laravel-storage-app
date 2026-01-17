@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Gate;
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
-         Place::class => PlacePolicy::class,  
+        Thing::class => ThingPolicy::class,
+        Place::class => PlacePolicy::class,  
     ];
 
     public function boot(): void
