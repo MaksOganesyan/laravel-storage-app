@@ -16,12 +16,18 @@ class Place extends Model
         'work',
     ];
 
-    public function usages()
-    {
-        return $this->hasMany(Usage::class);
-    }
+    protected $casts = [
+        'repair' => 'boolean',
+        'work'   => 'boolean',
+    ];
+
     public function things()
     {
         return $this->hasMany(Thing::class);
+    }
+
+    public function usages()
+    {
+        return $this->hasMany(Usage::class);
     }
 }

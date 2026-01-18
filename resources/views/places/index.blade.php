@@ -14,6 +14,9 @@
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
+        <div class="alert alert-info text-center mb-4">
+            <strong>Источник данных:</strong> {{ $source }}
+        </div>
 
         @if($places->isEmpty())
             <div class="alert alert-info">

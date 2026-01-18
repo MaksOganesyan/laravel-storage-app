@@ -4,14 +4,51 @@ namespace App\Http\Controllers;
 
 use App\Models\Place;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PlaceController extends Controller
 {
-
+    /**
+     * Список всех мест с кэшированием
+     */
     public function index()
     {
-        $places = Place::latest()->paginate(10);
-        return view('places.index', compact('places'));
+        $source = 'из кэша (загрузка мгновенная)';
+
+        $places = Cache::remember(
+            'places.all',
+            now()->addMinutes(30),
+            function () use (&$source) {
+                $source = 'из базы данных (первый запрос)';
+                return Place::orderBy('name')
+                    ->withCount('things')  // сколько вещей в месте
+                    ->get();
+            }
+        );
+
+        return view('places.index', compact('places', 'source'));
+    }
+
+    /**
+     * Детальная страница места с кэшированием
+     */
+    public function show(Place $place)
+    {
+        $source = 'из кэша (загрузка мгновенная)';
+
+        $place = Cache::remember(
+            "place.{$place->id}",
+            now()->addMinutes(60),
+            function () use ($place, &$source) {
+                $source = 'из базы данных (первый запрос)';
+                return $place->loadCount('things')
+                             ->load(['things' => function ($query) {
+                                 $query->latest()->take(10);
+                             }]);
+            }
+        );
+
+        return view('places.show', compact('place', 'source'));
     }
 
     public function create()
@@ -21,14 +58,20 @@ class PlaceController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'repair'      => 'boolean',
+            'work'        => 'boolean',
         ]);
 
-        Place::create($request->all());
+        Place::create($validated);
 
-        return redirect()->route('places.index')->with('success', 'Место добавлено!');
+        // Очищаем кэш списка мест
+        Cache::forget('places.all');
+
+        return redirect()->route('places.index')
+            ->with('success', 'Место успешно добавлено!');
     }
 
     public function edit(Place $place)
@@ -38,20 +81,32 @@ class PlaceController extends Controller
 
     public function update(Request $request, Place $place)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'repair'      => 'boolean',
+            'work'        => 'boolean',
         ]);
 
-        $place->update($request->all());
+        $place->update($validated);
 
-        return redirect()->route('places.index')->with('success', 'Место обновлено!');
+        // Очищаем кэш
+        Cache::forget('places.all');
+        Cache::forget("place.{$place->id}");
+
+        return redirect()->route('places.index')
+            ->with('success', 'Место обновлено!');
     }
 
     public function destroy(Place $place)
     {
         $place->delete();
 
-        return redirect()->route('places.index')->with('success', 'Место удалено!');
+        // Очищаем кэш
+        Cache::forget('places.all');
+        Cache::forget("place.{$place->id}");
+
+        return redirect()->route('places.index')
+            ->with('success', 'Место удалено!');
     }
 }
