@@ -32,4 +32,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/things/work', [ThingController::class, 'workThings'])->name('things.work');
     Route::get('/things/used', [ThingController::class, 'usedThings'])->name('things.used');
     Route::get('/things/all', [ThingController::class, 'allThings'])->name('things.all')->middleware('admin');
+    Broadcast::routes(['middleware' => ['auth']]);
 });

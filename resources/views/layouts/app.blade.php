@@ -88,5 +88,33 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@auth
+    <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <script>
+        var pusher = new Pusher("{{ config('broadcasting.connections.pusher.key') }}", {
+            cluster: "{{ config('broadcasting.connections.pusher.options.cluster') }}",
+            forceTLS: true
+        });
+
+        console.log('Pusher публичный канал подключён! Пользователь: {{ auth()->user()->name }}');
+
+        var channel = pusher.subscribe('things');
+
+        channel.bind('thing.created', function(data) {
+            Toastify({
+                text: `Новая вещь добавлена: ${data.thing.name} от ${data.thing.master?.name || 'кто-то'} в ${data.thing.place?.name || 'не указано'}`,
+                duration: 10000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#28a745",
+            }).showToast();
+        });
+    </script>
+@endauth
+
+
 </body>
 </html>

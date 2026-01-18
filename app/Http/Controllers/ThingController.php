@@ -52,6 +52,7 @@ class ThingController extends Controller
         ]);
 
         $thing = auth()->user()->things()->create($validated);
+        event(new \App\Events\ThingCreated($thing));
 
         Cache::forget("things.my.paginated." . auth()->id());
 
