@@ -16,7 +16,7 @@ class Thing extends Model
         'master_id',
         'amount',
         'place_id',
-        'unit_id', // ← добавил, если ещё нет
+        'unit_id',
     ];
 
     protected $casts = [
@@ -24,21 +24,14 @@ class Thing extends Model
         'amount' => 'integer',
     ];
 
+    protected $appends = [
+        'available_amount',
+        'wrnt_formatted',
+    ];
+
     public function master()
     {
         return $this->belongsTo(User::class, 'master_id');
-    }
-
-    public function usages()
-    {
-        return $this->hasMany(Usage::class);
-    }
-
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'usages')
-                    ->withPivot('amount')
-                    ->withTimestamps();
     }
 
     public function place()
@@ -51,17 +44,23 @@ class Thing extends Model
         return $this->belongsTo(Unit::class);
     }
 
-    /**
-     * Доступное количество для передачи (amount минус сумма переданных)
-     */
-    public function getAvailableAmountAttribute()
+    public function usages()
     {
-        return $this->amount - $this->usages->sum('amount');
+        return $this->hasMany(Usage::class);
     }
 
-    /**
-     * Форматированная дата гарантии
-     */
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'usages')
+            ->withPivot('amount')
+            ->withTimestamps();
+    }
+
+    public function getAvailableAmountAttribute()
+    {
+        return $this->amount - ($this->usages_sum_amount ?? $this->usages()->sum('amount'));
+    }
+
     public function getWrntFormattedAttribute()
     {
         return $this->wrnt ? $this->wrnt->format('d.m.Y') : 'Не указана';

@@ -6,23 +6,33 @@ use App\Models\Thing;
 use App\Models\User;
 use App\Models\Usage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ThingController extends Controller
 {
-    
+    /**
+     * Список вещей текущего пользователя с кэшированием
+     */
     public function index()
     {
-        $things = auth()->user()->things()
-            ->with('usages')
-            ->latest()
-            ->paginate(10);
+        $userId = auth()->id();
 
-        foreach ($things as $thing) {
-            $used = $thing->usages->sum('amount');
-            $thing->available_amount = $thing->amount - $used;
-        }
+        $source = 'из кэша (загрузка мгновенная)';
 
-        return view('things.index', compact('things'));
+        $things = Cache::remember(
+            "things.my.paginated.{$userId}",
+            now()->addMinutes(20),
+            function () use ($userId, &$source) {
+                $source = 'из базы данных (первый запрос)';
+                return Thing::where('master_id', $userId)
+                    ->with(['place', 'unit'])
+                    ->withSum('usages as used_amount', 'amount')
+                    ->latest()
+                    ->paginate(10);
+            }
+        );
+
+        return view('things.index', compact('things', 'source'));
     }
 
     public function create()
@@ -32,48 +42,75 @@ class ThingController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'wrnt'        => 'nullable|date',
             'amount'      => 'required|integer|min:1',
             'place_id'    => 'nullable|exists:places,id',
+            'unit_id'     => 'nullable|exists:units,id',
         ]);
 
-        auth()->user()->things()->create($request->all());
+        $thing = auth()->user()->things()->create($validated);
 
-        return redirect()->route('things.index')->with('success', 'Вещь успешно добавлена!');
+        Cache::forget("things.my.paginated." . auth()->id());
+
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь успешно добавлена!');
+    }
+
+    public function show(Thing $thing)
+    {
+        $thing->load(['place', 'unit', 'usages']);
+
+        return view('things.show', compact('thing'));
     }
 
     public function edit(Thing $thing)
     {
+        $this->authorizeThing($thing);
+
         return view('things.edit', compact('thing'));
     }
 
     public function update(Request $request, Thing $thing)
     {
-        $request->validate([
+        $this->authorizeThing($thing);
+
+        $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'wrnt'        => 'nullable|date',
             'amount'      => 'required|integer|min:1',
             'place_id'    => 'nullable|exists:places,id',
+            'unit_id'     => 'nullable|exists:units,id',
         ]);
 
-        $thing->update($request->all());
+        $thing->update($validated);
 
-        return redirect()->route('things.index')->with('success', 'Вещь обновлена!');
+        Cache::forget("things.my.paginated." . $thing->master_id);
+
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь успешно обновлена!');
     }
 
     public function destroy(Thing $thing)
     {
+        $this->authorizeThing($thing);
+
+        $ownerId = $thing->master_id;
         $thing->delete();
 
-        return redirect()->route('things.index')->with('success', 'Вещь удалена!');
+        Cache::forget("things.my.paginated.{$ownerId}");
+
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь удалена!');
     }
 
     public function transfer(Thing $thing)
     {
+        $this->authorizeThing($thing);
+
         $users = User::where('id', '!=', auth()->id())->get();
 
         return view('things.transfer', compact('thing', 'users'));
@@ -81,36 +118,38 @@ class ThingController extends Controller
 
     public function transferStore(Request $request, Thing $thing)
     {
-        $request->validate([
+        $this->authorizeThing($thing);
+
+        $validated = $request->validate([
             'user_id' => 'required|exists:users,id|not_in:' . auth()->id(),
             'amount'  => [
                 'required',
                 'integer',
                 'min:1',
-                'max:' . (int)$thing->available_amount,
+                'max:' . $thing->available_amount,
             ],
         ]);
 
-        if ($request->amount > $thing->available_amount) {
-            return back()->withErrors(['amount' => 'Нельзя передать больше, чем есть'])->withInput();
-        }
-
         Usage::create([
             'thing_id' => $thing->id,
-            'user_id'  => $request->user_id,
-            'amount'   => $request->amount,
+            'user_id'  => $validated['user_id'],
+            'amount'   => $validated['amount'],
             'place_id' => null,
         ]);
 
-        $thing->decrement('amount', $request->amount);
+        $thing->decrement('amount', $validated['amount']);
 
-        return redirect()->route('things.index')->with('success', 'Вещь успешно передана!');
+        Cache::forget("things.my.paginated." . auth()->id());
+
+        return redirect()->route('things.index')
+            ->with('success', 'Вещь успешно передана!');
     }
 
     public function received()
     {
         $received = auth()->user()->receivedThings()
             ->withPivot('amount')
+            ->latest()
             ->paginate(10);
 
         return view('things.received', compact('received'));
@@ -120,26 +159,26 @@ class ThingController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->receivedThings()->where('thing_id', $thing->id)->exists()) {
-            $pivot = $user->receivedThings()->where('thing_id', $thing->id)->first()->pivot;
-            $amount = $pivot->amount;
-
-            $thing->increment('amount', $amount);
-
-            $user->receivedThings()->detach($thing->id);
-
-            session()->flash('success', 'Вещь успешно возвращена владельцу!');
-        } else {
-            session()->flash('error', 'Эта вещь не была вам передана.');
+        if (!$user->receivedThings()->where('thing_id', $thing->id)->exists()) {
+            return redirect()->route('received.things')
+                ->with('error', 'Эта вещь не была вам передана.');
         }
 
-        return redirect()->route('received.things');
+        $pivot = $user->receivedThings()->where('thing_id', $thing->id)->first()->pivot;
+        $amount = $pivot->amount;
+
+        $thing->increment('amount', $amount);
+        $user->receivedThings()->detach($thing->id);
+
+        return redirect()->route('received.things')
+            ->with('success', 'Вещь успешно возвращена владельцу!');
     }
 
     public function myThings()
     {
         $things = auth()->user()->things()->latest()->paginate(10);
         $title = 'Мои вещи';
+
         return view('things.list', compact('things', 'title'));
     }
 
@@ -149,6 +188,7 @@ class ThingController extends Controller
             ->latest()
             ->paginate(10);
         $title = 'В ремонте';
+
         return view('things.list', compact('things', 'title'));
     }
 
@@ -158,6 +198,7 @@ class ThingController extends Controller
             ->latest()
             ->paginate(10);
         $title = 'В работе';
+
         return view('things.list', compact('things', 'title'));
     }
 
@@ -167,18 +208,35 @@ class ThingController extends Controller
             ->latest()
             ->paginate(10);
         $title = 'Переданные мной';
+
         return view('things.list', compact('things', 'title'));
     }
 
-    public function allThings()
-    {
-        $things = Thing::latest()->paginate(10);
-        $title = 'Все вещи';
-        return view('things.list', compact('things', 'title'));
-    }
+   public function allThings()
+{
+    $source = 'из кэша (загрузка мгновенная)';
 
-    public function show(Thing $thing)
+    $things = Cache::remember(
+        'things.all.paginated', 
+        now()->addMinutes(30),
+        function () use (&$source) {
+            $source = 'из базы данных (первый запрос)';
+            return Thing::with(['place', 'unit'])
+                ->withSum('usages as used_amount', 'amount')
+                ->latest()
+                ->paginate(10);
+        }
+    );
+
+    $title = 'Все вещи';
+
+    return view('things.list', compact('things', 'title', 'source'));
+}
+
+    private function authorizeThing(Thing $thing): void
     {
-        return view('things.show', compact('thing'));
+        if ($thing->master_id !== auth()->id()) {
+            abort(403, 'Это не ваша вещь');
+        }
     }
 }

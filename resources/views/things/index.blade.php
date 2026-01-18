@@ -27,6 +27,9 @@
                                         Гарантия до: {{ $thing->wrnt->format('d.m.Y') }}
                                     </p>
                                 @endif
+   <div class="alert alert-info text-center mb-4">
+    <strong>Источник данных:</strong> {{ $source }}
+</div>
 
                                 <!-- Размерность количества — вот это по ТЗ допа №6 -->
                                 <p class="text-muted mb-1">

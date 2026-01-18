@@ -4,8 +4,11 @@
 
 @section('content')
     <div class="container py-5">
-        <h1 class="mb-4">{{ $title ?? 'Список вещей' }}</h1>
+        <h1 class="mb-4">{{ $title }}</h1>
 
+        <div class="alert alert-info text-center mb-4">
+    <strong>Источник данных:</strong> {{ $source ?? 'из базы данных (первый запрос)' }}
+</div>
         @if($things->isEmpty())
             <div class="alert alert-info text-center">
                 В этой категории пока нет вещей.
@@ -28,7 +31,6 @@
                                     </p>
                                 @endif
 
-                                <!-- Размерность количества — вот это по ТЗ допа №6 -->
                                 <p class="text-muted mb-1">
                                     Всего: <strong>{{ $thing->amount }} {{ $thing->unit->short ?? 'шт.' }}</strong>
                                 </p>
@@ -37,7 +39,6 @@
                                     Доступно: <strong>{{ $thing->available_amount }} {{ $thing->unit->short ?? 'шт.' }}</strong>
                                 </p>
 
-                                <!-- Кнопки действий -->
                                 <div class="d-flex gap-2 mt-3">
                                     <a href="{{ route('things.edit', $thing) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i> Редактировать
@@ -65,7 +66,6 @@
                 @endforeach
             </div>
 
-            <!-- Пагинация -->
             <div class="d-flex justify-content-center mt-5">
                 {{ $things->links() }}
             </div>
