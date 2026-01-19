@@ -99,22 +99,37 @@
             forceTLS: true
         });
 
-        console.log('Pusher публичный канал подключён! Пользователь: {{ auth()->user()->name }}');
+        console.log('Pusher подключён! Пользователь: {{ auth()->user()->name }}');
 
-        var channel = pusher.subscribe('things');
-
-        channel.bind('thing.created', function(data) {
+        // Канал для вещей
+        var thingsChannel = pusher.subscribe('things');
+        thingsChannel.bind('thing.created', function(data) {
             Toastify({
                 text: `Новая вещь добавлена: ${data.thing.name} от ${data.thing.master?.name || 'кто-то'} в ${data.thing.place?.name || 'не указано'}`,
-                duration: 10000,
+                duration: 8000,
                 gravity: "top",
                 position: "right",
                 backgroundColor: "#28a745",
+                stopOnFocus: false,
+                close: true,
+            }).showToast();
+        });
+
+        // Канал для мест
+        var placesChannel = pusher.subscribe('places');
+        placesChannel.bind('place.created', function(data) {
+            Toastify({
+                text: `Новое место добавлено: ${data.place.name}`,
+                duration: 10000,
+                gravity: "top",
+                position: "left",
+                backgroundColor: "#007bff",
+                stopOnFocus: false,
+                close: true,
             }).showToast();
         });
     </script>
 @endauth
-
 
 </body>
 </html>

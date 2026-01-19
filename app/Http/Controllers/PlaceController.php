@@ -10,6 +10,7 @@ class PlaceController extends Controller
 {
     /**
      * Список всех мест с кэшированием
+     * После первого запроса данные берутся из кэша (быстрая загрузка)
      */
     public function index()
     {
@@ -21,7 +22,7 @@ class PlaceController extends Controller
             function () use (&$source) {
                 $source = 'из базы данных (первый запрос)';
                 return Place::orderBy('name')
-                    ->withCount('things')  // сколько вещей в месте
+                    ->withCount('things') // сколько вещей в месте
                     ->get();
             }
         );
@@ -30,7 +31,7 @@ class PlaceController extends Controller
     }
 
     /**
-     * Детальная страница места с кэшированием
+     * Детальная страница одного места с кэшированием
      */
     public function show(Place $place)
     {
@@ -43,7 +44,7 @@ class PlaceController extends Controller
                 $source = 'из базы данных (первый запрос)';
                 return $place->loadCount('things')
                              ->load(['things' => function ($query) {
-                                 $query->latest()->take(10);
+                                 $query->latest()->take(10); // последние 10 вещей
                              }]);
             }
         );
@@ -51,42 +52,57 @@ class PlaceController extends Controller
         return view('places.show', compact('place', 'source'));
     }
 
+    /**
+     * Форма добавления нового места
+     */
     public function create()
     {
         return view('places.create');
     }
 
+    /**
+     * Сохранение нового места
+     */
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'repair'      => 'boolean',
-            'work'        => 'boolean',
-        ]);
+{
+    $validated = $request->validate([
+        'name'        => 'required|string|max:255',
+        'description' => 'nullable|string',
+    ]);
 
-        Place::create($validated);
+    $validated['repair'] = $request->boolean('repair');
+    $validated['work']   = $request->boolean('work');
 
-        // Очищаем кэш списка мест
-        Cache::forget('places.all');
+    $place = Place::create($validated);
 
-        return redirect()->route('places.index')
-            ->with('success', 'Место успешно добавлено!');
-    }
+    event(new \App\Events\PlaceCreated($place)); // ← отправляем событие
 
+    Cache::forget('places.all');
+
+    return redirect()->route('places.index')
+        ->with('success', 'Место успешно добавлено!');
+}
+
+    /**
+     * Форма редактирования места
+     */
     public function edit(Place $place)
     {
         return view('places.edit', compact('place'));
     }
 
+    /**
+     * Обновление места
+     */
     public function update(Request $request, Place $place)
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'repair'      => 'boolean',
-            'work'        => 'boolean',
         ]);
+
+        $validated['repair'] = $request->boolean('repair');
+        $validated['work']   = $request->boolean('work');
 
         $place->update($validated);
 
@@ -98,6 +114,9 @@ class PlaceController extends Controller
             ->with('success', 'Место обновлено!');
     }
 
+    /**
+     * Удаление места
+     */
     public function destroy(Place $place)
     {
         $place->delete();
