@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Thing;
+use App\Models\Place;
 use App\Models\User;
 use App\Models\Usage;
 use Illuminate\Http\Request;
@@ -35,13 +36,29 @@ class ThingController extends Controller
         return view('things.index', compact('things', 'source'));
     }
 
+    /**
+     * Форма добавления новой вещи — только для администратора
+     */
     public function create()
     {
-        return view('things.create');
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ запрещён. Только для администратора.');
+        }
+
+        $places = Place::orderBy('name')->get();
+
+        return view('things.create', compact('places'));
     }
 
+    /**
+     * Сохранение новой вещи — только для администратора
+     */
     public function store(Request $request)
     {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ запрещён. Только для администратора.');
+        }
+
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -63,20 +80,35 @@ class ThingController extends Controller
     public function show(Thing $thing)
     {
         $thing->load(['place', 'unit', 'usages']);
-
         return view('things.show', compact('thing'));
     }
 
+    /**
+     * Форма редактирования вещи — только для администратора
+     */
     public function edit(Thing $thing)
     {
         $this->authorizeThing($thing);
 
-        return view('things.edit', compact('thing'));
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ запрещён. Только для администратора.');
+        }
+
+        $places = Place::orderBy('name')->get();
+
+        return view('things.edit', compact('thing', 'places'));
     }
 
+    /**
+     * Обновление вещи — только для администратора
+     */
     public function update(Request $request, Thing $thing)
     {
         $this->authorizeThing($thing);
+
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ запрещён. Только для администратора.');
+        }
 
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
@@ -95,9 +127,16 @@ class ThingController extends Controller
             ->with('success', 'Вещь успешно обновлена!');
     }
 
+    /**
+     * Удаление вещи — только для администратора
+     */
     public function destroy(Thing $thing)
     {
         $this->authorizeThing($thing);
+
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Доступ запрещён. Только для администратора.');
+        }
 
         $ownerId = $thing->master_id;
         $thing->delete();
@@ -213,26 +252,26 @@ class ThingController extends Controller
         return view('things.list', compact('things', 'title'));
     }
 
-   public function allThings()
-{
-    $source = 'из кэша (загрузка мгновенная)';
+    public function allThings()
+    {
+        $source = 'из кэша (загрузка мгновенная)';
 
-    $things = Cache::remember(
-        'things.all.paginated', 
-        now()->addMinutes(30),
-        function () use (&$source) {
-            $source = 'из базы данных (первый запрос)';
-            return Thing::with(['place', 'unit'])
-                ->withSum('usages as used_amount', 'amount')
-                ->latest()
-                ->paginate(10);
-        }
-    );
+        $things = Cache::remember(
+            'things.all.paginated',
+            now()->addMinutes(30),
+            function () use (&$source) {
+                $source = 'из базы данных (первый запрос)';
+                return Thing::with(['place', 'unit'])
+                    ->withSum('usages as used_amount', 'amount')
+                    ->latest()
+                    ->paginate(10);
+            }
+        );
 
-    $title = 'Все вещи';
+        $title = 'Все вещи';
 
-    return view('things.list', compact('things', 'title', 'source'));
-}
+        return view('things.list', compact('things', 'title', 'source'));
+    }
 
     private function authorizeThing(Thing $thing): void
     {

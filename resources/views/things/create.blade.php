@@ -52,7 +52,7 @@
                 @enderror
             </div>
 
-            <!-- Размерность количества — вот это по ТЗ допа №6 -->
+            <!-- Размерность количества -->
             <div class="mb-3">
                 <label for="unit_id" class="form-label">Размерность количества</label>
                 <select name="unit_id" id="unit_id" class="form-select @error('unit_id') is-invalid @enderror">
@@ -72,7 +72,7 @@
                 <label for="place_id" class="form-label">Место хранения</label>
                 <select name="place_id" id="place_id" class="form-select @error('place_id') is-invalid @enderror">
                     <option value="">-- Не выбрано --</option>
-                    @foreach(auth()->user()->places as $place)
+                    @foreach($places as $place)
                         <option value="{{ $place->id }}" {{ old('place_id') == $place->id ? 'selected' : '' }}>
                             {{ $place->name }}
                         </option>
