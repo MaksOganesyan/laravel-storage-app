@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class UserFactory extends Factory
 {
@@ -13,9 +12,19 @@ class UserFactory extends Factory
         return [
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => Hash::make('12345678'), // пароль для всех тестовых — 12345678
-            'remember_token' => Str::random(10),
+            'password' => Hash::make('12345678'), 
+            'is_admin' => false,
         ];
+    }
+
+    // Админ
+    public function admin()
+    {
+        return $this->state(fn () => [
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('12345678'),
+            'is_admin' => true,
+        ]);
     }
 }

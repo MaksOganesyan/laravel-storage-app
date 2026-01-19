@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Place;
+use App\Models\Thing;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -9,27 +12,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Админ — создаём или обновляем (не падает на дубликат)
-        User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Админ',
-                'password' => bcrypt('12345678'),
-                'is_admin' => true,
-            ]
-        );
+        User::factory()->count(5)->create();
 
-        // Тестовый пользователь — тоже firstOrCreate
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'password' => bcrypt('12345678'),
-                'is_admin' => false,
-            ]
-        );
+        Place::factory()->count(10)->create();
 
-        $this->command->info('Админ создан/обновлён: admin@example.com / 12345678');
-        $this->command->info('Тестовый пользователь: test@example.com / 12345678');
+        Unit::factory()->count(5)->create();
+
+        Thing::factory()->count(30)->create();
     }
 }
