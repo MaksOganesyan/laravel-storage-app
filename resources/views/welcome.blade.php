@@ -16,32 +16,33 @@
         <div class="row justify-content-center mb-5">
             @auth
                 <div class="col-md-4 mb-3">
-                    <a href="{{ route('things.index') }}" class="btn btn-primary btn-lg w-100">
+                    <a href="/things" class="btn btn-primary btn-lg w-100">
                         <i class="bi bi-box-seam me-2"></i> Мои вещи
                     </a>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <a href="{{ route('places.index') }}" class="btn btn-success btn-lg w-100">
-                        <i class="bi bi-house-door me-2"></i>  Места хранения
+                    <a href="/places" class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-house-door me-2"></i> Места хранения
                     </a>
                 </div>
             @else
                 <div class="col-md-6 mb-4">
-                    <a href="{{ route('register') }}" class="btn btn-success btn-lg w-100">
+                    <a href="/register" class="btn btn-success btn-lg w-100">
                         <i class="bi bi-person-plus me-2"></i> Зарегистрироваться
                     </a>
                 </div>
             @endauth
         </div>
+
         @auth
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-6 mb-4">
-            <a href="{{ route('received.things') }}" class="btn btn-info btn-lg w-100">
-                <i class="bi bi-gift me-2"></i> Вещи, которые мне передали
-            </a>
-        </div>
-    </div>
-@endauth
+            <div class="row justify-content-center mt-5">
+                <div class="col-md-6 mb-4">
+                    <a href="/received-things" class="btn btn-info btn-lg w-100">
+                        <i class="bi bi-gift me-2"></i> Вещи, которые мне передали
+                    </a>
+                </div>
+            </div>
+        @endauth
 
         <!-- Преимущества (карточки) -->
         <div class="row text-center">
@@ -85,13 +86,13 @@
         <!-- Призыв к действию (кнопка внизу) -->
         @guest
             <div class="text-center mt-5">
-                <a href="{{ route('register') }}" class="btn btn-success btn-lg px-5">
+                <a href="/register" class="btn btn-success btn-lg px-5">
                     <i class="bi bi-person-plus me-2"></i> Зарегистрироваться
                 </a>
             </div>
         @else
             <div class="text-center mt-5">
-                <a href="{{ route('things.create') }}" class="btn btn-primary btn-lg px-5">
+                <a href="/things/create" class="btn btn-primary btn-lg px-5">
                     <i class="bi bi-plus-circle me-2"></i> Добавить вещь
                 </a>
             </div>
